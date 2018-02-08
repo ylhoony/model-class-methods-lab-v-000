@@ -5,29 +5,39 @@ class Boat < ActiveRecord::Base
 
 
   def self.first_five
-    self.all.limit(5)
+    all.limit(5)
   end
 
   def self.dinghy
-    self.all.where("length < 20")
+    where("length < 20")
   end
 
   def self.ship
-    self.all.where("length >= 20")
+    where("length >= 20")
   end
 
   def self.last_three_alphabetically
-    # self.all.order(name: :desc).first(3) => this is an Array class
-    self.all.order(name: :desc).limit(3) #=> this is a Boat::ActiveRecord_Relation class
+    all.order(name: :desc).limit(3)
   end
 
   def self.without_a_captain
-    self.all.where(captain_id: nil)
+    where(captain_id: nil)
   end
 
   def self.sailboats
-    binding.pry
+    includes(:classifications).where(classifications: { name: 'Sailboat' })
   end
 
+  def self.with_three_classifications
+    joins(:classifications).group("boats.id").having("COUNT(*) = 3").select("boats.*")
+  end
 
+  def self.non_sailboats
+    where("id NOT IN (?)", self.sailboats.pluck(:id))
+  end
+
+  def self.longest
+    order('length DESC').first
+  end
+  
 end
